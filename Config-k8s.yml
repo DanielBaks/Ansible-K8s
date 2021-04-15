@@ -1,0 +1,64 @@
+----
+- hosts: knodes
+  tasks:
+  - name: Change the hostname
+    become: yes
+    hostname:
+      name: "{{ inventory_hostname }}"
+  - name: 'Add Hostname /etc/hosts'
+    become: yes
+    lineinfile:
+      path: /etc/hosts
+      regexp: '^127\.0\.0\.1[ \t]+localhost'
+      line: '127.0.0.1 localhost {{ {{ inventory_hostname }} }}'
+      state: present
+  - name: Install thee pckage 'htop'
+    become: yes
+    apt:
+      name: 'htop'
+      state: present
+  - name: Add the user to the group microk8s
+    become: yes
+    user:
+      name: tux
+      groups: microk8s
+      append: yes
+  - name: Add Kubectl alias for tux user
+    become: yes
+    lineinfile:
+      path=/home/tux/.bashrc
+      line="alias kubectl='microk8s kubectl'"
+      owner=tux
+      state=present
+      intertafter=EOF
+      create=True
+  - name: Create the completion script
+    shell: kubectl completion bash > /tmp/kubectl
+
+  - name: move the completion script in /etc/bash_completion.d
+    become: yes
+    command: mv /tmp/kubectl /etc/bash_completion.d
+
+  - name: Update kubectl owner group and mode
+    become: yes
+    file:
+      path: /etc/bash_completion.d/kubectl
+      owner: root
+      group: root 
+      mode: "0644"
+
+  - name: deactive the swap immediatelly
+    become: yes
+    command: swapoff -a 
+  
+  - name: Disable SWAP in fstab
+    become: yes
+    replace:
+      path: /etc/fstab
+      regexp: '^([^#].*\sswap\s+sw\s+.*)$'
+      replace: '# \1'
+
+  - name: Unconditionnaly reboot the machine with all defaults
+    become: yes
+    reboot:
+
