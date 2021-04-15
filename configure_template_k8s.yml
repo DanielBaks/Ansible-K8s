@@ -1,0 +1,90 @@
+---
+- hosts: k8stemplate
+  tasks:
+  - name: update the apt package index
+    become: yes
+    apt:
+      name: "*"
+      state: latest
+      update_cache: yes
+      force_apt_get: yes
+
+  - name: Install package for apt add repository over HHTPS
+    become: yes
+    apt:
+      name: "{{ packagesdep }}"
+      force_apt_get: yes
+      state: latest
+      update_cache: yes
+    vars:
+      packagesdep:
+      - git
+      - apt-transport-https
+      - ca-certificates
+      - wget
+      - software-properties-common
+      - gnupg2
+      - curl
+
+  - name: Add Apt signing key from official docker repository
+    become: yes
+    apt_key:
+      url: https://download.docker.com/linux/debian/gpg
+      state: present
+
+  - name: add docker official repository for Debian Stretch
+    become: yes
+    apt_repository:
+      repo: deb [arch=amd64] https://download.docker.com/linux/debian stretch stable
+      state: present
+
+  - name: index new repo into the update_cache
+    become: yes
+    apt:
+      name: "*"
+      state: latest
+      update_cache: yes
+      force_apt_get: yes
+  - name: actually install docker
+    become: yes
+    apt:
+      name: "docker-ce"
+      state: latest
+
+  - name: add the user 'tux' to the group 'docker, appending the group'
+    become: yes
+    user:
+      name: tux
+      groups: docker
+      append: yes
+
+  - name: add google official gpg key
+    become: yes
+    apt_key:
+      url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+      state: present
+  - name: add kubernetes repository
+    become: yes
+    apt_repository:
+      repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+      state: present
+      filename: kubernetes
+      mode: 0600
+
+  - name: installing kubernetes cluster packages
+    become: yes
+    apt:
+      name:
+        - kubeadm
+        - kubectl
+        - kubelet
+      state: present
+
+  - name: enable service kubelet and enable persistently
+    become: yes
+    service:
+      name: kubelet
+      enabled: yes
+  - name: unconditionally reboot gt he machine with all defaults
+    become: yes
+    reboot:

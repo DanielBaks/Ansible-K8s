@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: htmlcss-dep
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: htmlcss
+  minReadySeconds: 10
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: htmlcss
+    spec: 
+      containers:
+      - name: htmlcss
+        image: matsu365/htmlcss:latest
+        ports:
+        - containerPort: 80
