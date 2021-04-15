@@ -1,4 +1,4 @@
-----
+---
 - hosts: knodes
   tasks:
   - name: Change the hostname
@@ -10,7 +10,7 @@
     lineinfile:
       path: /etc/hosts
       regexp: '^127\.0\.0\.1[ \t]+localhost'
-      line: '127.0.0.1 localhost {{ {{ inventory_hostname }} }}'
+      line: '127.0.0.1 localhost {{  inventory_hostname  }}'
       state: present
   - name: Install thee pckage 'htop'
     become: yes
@@ -20,17 +20,17 @@
   - name: Add the user to the group microk8s
     become: yes
     user:
-      name: tux
+      name: daniel
       groups: microk8s
       append: yes
-  - name: Add Kubectl alias for tux user
+  - name: Add Kubectl alias for daniel user
     become: yes
     lineinfile:
-      path=/home/tux/.bashrc
+      path=/home/daniel/.bashrc
       line="alias kubectl='microk8s kubectl'"
-      owner=tux
+      owner=daniel
       state=present
-      intertafter=EOF
+      insertafter=EOF
       create=True
   - name: Create the completion script
     shell: kubectl completion bash > /tmp/kubectl
